@@ -71,16 +71,13 @@ public class Bellman implements Algorithm {
         // GUI thing I think
         control.startAlgorithm(target);
 
-        if (hard) {
-            // copy-pasted from Dijkstra
-            open = initLoop(target, hard);
-            while (open.size() > 0) {
-                Router router = open.firstElement();
-                open.remove(0);
-                shortestPath(router, target);
-            }
-        } else {
-            // should it do things differently here?
+        // copy-pasted from Dijkstra
+        open = initLoop(target, hard);
+        while (!open.isEmpty()) {
+            Iterator<Router> it = open.iterator();
+            Router router = it.next();
+            open.remove(router);
+            shortestPath(router, target, open);
         }
 
         // GUI thing I think
@@ -96,7 +93,7 @@ public class Bellman implements Algorithm {
             int tot = router.getCostTo(target) + l.cost;
             if (tot < l.target.getCostTo(target)) {
                 l.target.putCostTo(target, tot);
-                l.target.putForward(l);
+                l.target.putForward(target, l.getDual());
 
                 // if a node's stuff changes we should put it in open, right?
                 open.add(l.target);
@@ -109,37 +106,29 @@ public class Bellman implements Algorithm {
 
     private HashSet<Router> initLoop(Router target, boolean hard) {
         // hard is true when this is computing entire algorithm; false when called by redo after link change
-
-        if (hard) {
-            // copy-pasted from Dijkstra and edited to fit
-            // not sure if correct
-            HashSet<Router> open = new HashSet<>();
-            initRouters(target, hard);
-            return open;
-        } else {
-            // should it be different here?
-        }
+        //
+        // Pretty sure this function is correct based on convo w/ Rich
+        open = new HashSet<>();
+        initRouters(target, hard);
+        return open;
     }
 
     private void initRouters(Router target, boolean hard) {
         // hard is true when this is computing entire algorithm; false when called by redo after link change	    
+        //
+        // Pretty sure this function is correct based on convo w/ Rich
+        //
+        // If hard, we want to set all node's costs to INFINITY
         if (hard) {
-            // reinit costs for all paths ending at target
-            target.costTo = new HashMap<Router, Integer>;
+            // reinit costs for all paths to target
             for (Router source : routers) {
-                if (source == target) target.putCostTo(source, 0);
-                else target.putCostTo(source, INFINITY);
+                source.putCostTo(target, INFINITY);
             }
-            // only adding this node to the open hashset
-            // we'll look at all of its neighbors when we process it
-            // I think
-            // or should we be adding all of its neighbors here?
-            open.add(target);
         }
-        else {
-            // does this even need to do anything??
-            open.add(target); // maybe?
-        }
+        // regardless of hard, we want to set target's cost to 0,
+        // and add it to open.
+        target.putCostTo(target, 0);
+        open.add(target); 
     }
 
     // ---------------------- You should not have to touch anything below this line ------------------------
